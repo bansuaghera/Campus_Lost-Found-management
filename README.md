@@ -75,9 +75,9 @@ Improve recoverability and traceability of misplaced belongings by providing a s
 
 ## 🛠️ Tech Stack (Suggested)
 
-* 🌐 Frontend: HTML, Tailwind CSS, Flowbite
-* 🖥️ Backend: PHP / Node.js
-* 🗄️ Database: MySQL
+* 🌐 Frontend: React,HTML, Tailwind CSS, Flowbite
+* 🖥️ Backend: Node.js
+* 🗄️ Database: Ppostgresql
 
 ---
 
