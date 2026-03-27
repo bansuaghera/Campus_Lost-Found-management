@@ -7,6 +7,7 @@ const {
   getMyItems,
   updateStatus,
   searchItems,
+  updateItem,
 } = require("../controllers/itemController");
 
 router.get("/items", getItems);
@@ -14,6 +15,7 @@ router.get("/items/my", auth, getMyItems);
 router.get("/items/:id", getItem);
 router.get("/search", searchItems);
 router.post("/items", auth, addItem);
+router.put("/items/:id", auth, updateItem);
 router.put("/items/:id/status", auth, updateStatus);
 
 module.exports = router;

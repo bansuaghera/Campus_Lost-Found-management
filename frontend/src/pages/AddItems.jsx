@@ -1,21 +1,40 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
+import { ITEM_CATEGORIES, REPORT_TYPES } from "../constants";
 
 function AddItem({ user }) {
   const navigate = useNavigate();
   const [form, setForm] = useState({
     title: "",
     description: "",
+    category: "Other",
     location: "",
     contact: user?.email || "",
-    status: "Reported",
+    reportType: "Lost",
+    status: "Lost",
+    reportedAt: new Date().toISOString().slice(0, 10),
   });
   const [feedback, setFeedback] = useState({ type: "", text: "" });
   const [submitting, setSubmitting] = useState(false);
 
+  useEffect(() => {
+    if (user?.email) {
+      setForm((current) => ({
+        ...current,
+        contact: current.contact || user.email,
+      }));
+    }
+  }, [user]);
+
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    setForm((current) => ({
+      ...current,
+      [name]: value,
+      ...(name === "reportType" ? { status: value } : {}),
+    }));
   };
 
   const submit = async (e) => {
@@ -73,6 +92,30 @@ function AddItem({ user }) {
           />
         </label>
 
+        <div className="field-grid">
+          <label className="field">
+            <span>Report type</span>
+            <select name="reportType" value={form.reportType} onChange={handleChange}>
+              {REPORT_TYPES.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="field">
+            <span>Category</span>
+            <select name="category" value={form.category} onChange={handleChange}>
+              {ITEM_CATEGORIES.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
         <label className="field">
           <span>Last seen or found location</span>
           <input
@@ -80,6 +123,17 @@ function AddItem({ user }) {
             placeholder="Library desk, C-block corridor, cafeteria..."
             value={form.location}
             onChange={handleChange}
+          />
+        </label>
+
+        <label className="field">
+          <span>Date of report</span>
+          <input
+            name="reportedAt"
+            type="date"
+            value={form.reportedAt}
+            onChange={handleChange}
+            required
           />
         </label>
 

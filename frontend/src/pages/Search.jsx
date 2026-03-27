@@ -1,26 +1,26 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import API from "../services/api";
 import ItemCard from "../components/ItemCard";
+import { ITEM_CATEGORIES, ITEM_STATUSES, REPORT_TYPES } from "../constants";
 
 function Search() {
-  const [query, setQuery] = useState("");
+  const [filters, setFilters] = useState({
+    query: "",
+    status: "",
+    reportType: "",
+    category: "",
+    location: "",
+  });
   const [results, setResults] = useState([]);
-  const [searchState, setSearchState] = useState("idle");
+  const [searchState, setSearchState] = useState("loading");
   const [error, setError] = useState("");
 
-  const handleSearch = async () => {
-    if (!query.trim()) {
-      setSearchState("idle");
-      setResults([]);
-      setError("Enter a keyword like bottle, ID card, headphones, or bag.");
-      return;
-    }
-
+  const runSearch = async (params) => {
     try {
       setSearchState("loading");
       setError("");
-      const res = await API.get("/search", {
-        params: { query: query.trim() },
+      const res = await API.get("/items", {
+        params,
       });
       setResults(res.data);
       setSearchState("success");
@@ -33,6 +33,24 @@ function Search() {
       );
       setSearchState("error");
     }
+  };
+
+  useEffect(() => {
+    const loadInitialResults = async () => {
+      await runSearch({});
+    };
+
+    loadInitialResults();
+  }, []);
+
+  const handleSearch = async () => {
+    const params = Object.fromEntries(
+      Object.entries(filters)
+        .map(([key, value]) => [key, typeof value === "string" ? value.trim() : value])
+        .filter(([, value]) => value),
+    );
+
+    await runSearch(params);
   };
 
   return (
@@ -49,13 +67,71 @@ function Search() {
 
         <div className="search-bar">
           <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            value={filters.query}
+            onChange={(e) => setFilters((current) => ({ ...current, query: e.target.value }))}
             placeholder="Search for wallet, bottle, keys..."
           />
           <button className="button button--primary" onClick={handleSearch}>
             {searchState === "loading" ? "Searching..." : "Search"}
           </button>
+        </div>
+
+        <div className="filter-grid">
+          <label className="field">
+            <span>Status</span>
+            <select
+              value={filters.status}
+              onChange={(e) => setFilters((current) => ({ ...current, status: e.target.value }))}
+            >
+              <option value="">All statuses</option>
+              {ITEM_STATUSES.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="field">
+            <span>Report type</span>
+            <select
+              value={filters.reportType}
+              onChange={(e) =>
+                setFilters((current) => ({ ...current, reportType: e.target.value }))
+              }
+            >
+              <option value="">All report types</option>
+              {REPORT_TYPES.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="field">
+            <span>Category</span>
+            <select
+              value={filters.category}
+              onChange={(e) => setFilters((current) => ({ ...current, category: e.target.value }))}
+            >
+              <option value="">All categories</option>
+              {ITEM_CATEGORIES.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="field">
+            <span>Location</span>
+            <input
+              value={filters.location}
+              onChange={(e) => setFilters((current) => ({ ...current, location: e.target.value }))}
+              placeholder="Library, admin block, lab..."
+            />
+          </label>
         </div>
 
         {error && <p className="inline-message inline-message--error">{error}</p>}
@@ -77,7 +153,7 @@ function Search() {
           <p>
             {searchState === "loading"
               ? "We are checking the campus board for close matches."
-              : "Search results will appear here after you enter a title keyword and run a search."}
+              : "Use the filters above to narrow results by status, category, location, or report type."}
           </p>
         </div>
       )}

@@ -26,6 +26,13 @@ function Home() {
     loadItems();
   }, []);
 
+  const lostCount = items.filter((item) => item.status === "Lost").length;
+  const activeClaims = items.reduce(
+    (count, item) =>
+      count + (item.responses?.filter((response) => response.claimStatus === "Pending").length || 0),
+    0,
+  );
+
   return (
     <section className="page-stack">
       <section className="hero">
@@ -41,15 +48,15 @@ function Home() {
         <div className="hero__stats">
           <div className="stat-card">
             <span className="stat-card__value">{items.length}</span>
-            <span className="stat-card__label">Items listed</span>
+            <span className="stat-card__label">Open reports</span>
           </div>
           <div className="stat-card">
-            <span className="stat-card__value">24/7</span>
-            <span className="stat-card__label">Search access</span>
+            <span className="stat-card__value">{lostCount}</span>
+            <span className="stat-card__label">Still marked lost</span>
           </div>
           <div className="stat-card">
-            <span className="stat-card__value">1 place</span>
-            <span className="stat-card__label">For lost and found teams</span>
+            <span className="stat-card__value">{activeClaims}</span>
+            <span className="stat-card__label">Pending claim notes</span>
           </div>
         </div>
       </section>

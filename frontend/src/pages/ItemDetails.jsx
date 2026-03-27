@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import API from "../services/api";
+import { ITEM_STATUSES } from "../constants";
 
 function ItemDetails({ auth }) {
   const { id } = useParams();
@@ -9,6 +10,7 @@ function ItemDetails({ auth }) {
   const [message, setMessage] = useState("");
   const [responses, setResponses] = useState([]);
   const [feedback, setFeedback] = useState("");
+  const [feedbackType, setFeedbackType] = useState("error");
 
   useEffect(() => {
     const loadItem = async () => {
@@ -22,6 +24,7 @@ function ItemDetails({ auth }) {
         setResponses(responsesRes.data);
         setStatus("success");
       } catch (err) {
+        setFeedbackType("error");
         setFeedback(
           err.response?.data?.message ||
             err.response?.data?.error ||
@@ -34,13 +37,17 @@ function ItemDetails({ auth }) {
     loadItem();
   }, [id]);
 
+  const isOwner = auth?.user?.id === item?.userId;
+
   const send = async () => {
     if (!auth?.isAuthenticated) {
+      setFeedbackType("error");
       setFeedback("Login is required before sending a response.");
       return;
     }
 
     if (!message.trim()) {
+      setFeedbackType("error");
       setFeedback("Write a short handoff note before sending.");
       return;
     }
@@ -52,14 +59,28 @@ function ItemDetails({ auth }) {
       });
       setResponses((prev) => [res.data, ...prev]);
       setMessage("");
+      setFeedbackType("success");
       setFeedback("Response sent successfully.");
     } catch (err) {
+      setFeedbackType("error");
       setFeedback(
         err.response?.data?.message ||
           err.response?.data?.error ||
           err.response?.data?.msg ||
           "Unable to send the response right now.",
       );
+    }
+  };
+
+  const updateStatus = async (nextStatus) => {
+    try {
+      const res = await API.put(`/items/${id}/status`, { status: nextStatus });
+      setItem(res.data);
+      setFeedbackType("success");
+      setFeedback(`Status updated to ${nextStatus}.`);
+    } catch (err) {
+      setFeedbackType("error");
+      setFeedback(err.response?.data?.message || "Unable to update the status right now.");
     }
   };
 
@@ -96,8 +117,16 @@ function ItemDetails({ auth }) {
 
         <div className="details-grid">
           <div className="details-grid__item">
+            <span>Report type</span>
+            <strong>{item.reportType || "Lost"}</strong>
+          </div>
+          <div className="details-grid__item">
             <span>Status</span>
             <strong>{item.status || "Reported"}</strong>
+          </div>
+          <div className="details-grid__item">
+            <span>Category</span>
+            <strong>{item.category || "Other"}</strong>
           </div>
           <div className="details-grid__item">
             <span>Location</span>
@@ -108,45 +137,62 @@ function ItemDetails({ auth }) {
             <strong>{item.contact || "No contact shared"}</strong>
           </div>
           <div className="details-grid__item">
-            <span>Item ID</span>
-            <strong>#{item.id}</strong>
+            <span>Reported</span>
+            <strong>{item.reportedAt || "Not specified"}</strong>
+          </div>
+          <div className="details-grid__item">
+            <span>Reported by</span>
+            <strong>{item.owner?.name || "Campus member"}</strong>
           </div>
         </div>
 
-        <div className="field">
-          <span>Return coordination note</span>
-          <textarea
-            rows="4"
-            placeholder={
-              auth?.isAuthenticated
-                ? "Share where the owner can meet you or how to identify the item."
-                : "Login to send a response for this item."
-            }
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            disabled={!auth?.isAuthenticated}
-          />
-        </div>
+        {isOwner ? (
+          <label className="field">
+            <span>Manage item status</span>
+            <select value={item.status} onChange={(e) => updateStatus(e.target.value)}>
+              {ITEM_STATUSES.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : (
+          <div className="field">
+            <span>Return coordination note</span>
+            <textarea
+              rows="4"
+              placeholder={
+                auth?.isAuthenticated
+                  ? "Share where the owner can meet you or how to identify the item."
+                  : "Login to send a response for this item."
+              }
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              disabled={!auth?.isAuthenticated}
+            />
+          </div>
+        )}
 
         {feedback && (
           <p
             className={`inline-message ${
-              feedback.includes("successfully")
-                ? "inline-message--success"
-                : "inline-message--error"
+              feedbackType === "success" ? "inline-message--success" : "inline-message--error"
             }`}
           >
             {feedback}
           </p>
         )}
 
-        <button
-          className="button button--primary"
-          onClick={send}
-          disabled={!auth?.isAuthenticated}
-        >
-          Send Response
-        </button>
+        {!isOwner && (
+          <button
+            className="button button--primary"
+            onClick={send}
+            disabled={!auth?.isAuthenticated}
+          >
+            Send Claim Note
+          </button>
+        )}
 
         <section className="response-list">
           <div className="section-heading">
@@ -162,7 +208,12 @@ function ItemDetails({ auth }) {
           ) : (
             responses.map((response) => (
               <div className="response-card" key={response.id}>
+                <div className="response-card__topline">
+                  <strong>{response.responder?.name || "Campus member"}</strong>
+                  <span>{new Date(response.createdAt).toLocaleString()}</span>
+                </div>
                 <p>{response.message}</p>
+                <small>{response.claimStatus}</small>
               </div>
             ))
           )}

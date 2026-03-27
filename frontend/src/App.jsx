@@ -10,6 +10,21 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 
+const readStoredUser = () => {
+  const stored = localStorage.getItem("campus-user");
+
+  if (!stored) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(stored);
+  } catch {
+    localStorage.removeItem("campus-user");
+    return null;
+  }
+};
+
 function ProtectedRoute({ isAuthenticated, children }) {
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -20,10 +35,7 @@ function ProtectedRoute({ isAuthenticated, children }) {
 
 function App() {
   const [token, setToken] = useState(() => localStorage.getItem("token"));
-  const [user, setUser] = useState(() => {
-    const stored = localStorage.getItem("campus-user");
-    return stored ? JSON.parse(stored) : null;
-  });
+  const [user, setUser] = useState(readStoredUser);
 
   useEffect(() => {
     const loadCurrentUser = async () => {

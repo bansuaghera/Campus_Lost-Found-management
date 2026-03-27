@@ -39,7 +39,8 @@ a {
 
 button,
 input,
-textarea {
+textarea,
+select {
   font: inherit;
 }
 
@@ -53,7 +54,8 @@ button:disabled {
 }
 
 input,
-textarea {
+textarea,
+select {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 18px;
@@ -70,7 +72,8 @@ textarea {
 }
 
 input:focus,
-textarea:focus {
+textarea:focus,
+select:focus {
   border-color: rgba(201, 108, 59, 0.6);
   box-shadow: 0 0 0 4px rgba(201, 108, 59, 0.12);
 }
@@ -283,14 +286,45 @@ textarea:focus {
   gap: 0.75rem;
 }
 
+.item-card__badge-row,
+.item-card__meta-row,
+.response-card__topline {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
 .item-card__badge {
   width: fit-content;
   padding: 0.35rem 0.75rem;
   border-radius: 999px;
-  background: rgba(22, 78, 99, 0.1);
-  color: var(--accent);
   font-size: 0.8rem;
   font-weight: 700;
+}
+
+.item-card__badge--info {
+  background: rgba(22, 78, 99, 0.1);
+  color: var(--accent);
+}
+
+.item-card__badge--danger {
+  background: rgba(180, 35, 24, 0.08);
+  color: var(--danger);
+}
+
+.item-card__badge--warn {
+  background: rgba(168, 75, 47, 0.12);
+  color: var(--brand-dark);
+}
+
+.item-card__badge--success {
+  background: rgba(15, 118, 110, 0.12);
+  color: var(--success);
+}
+
+.item-card__badge--neutral {
+  background: rgba(31, 41, 55, 0.06);
+  color: var(--muted);
 }
 
 .item-card__description {
@@ -359,6 +393,18 @@ textarea:focus {
 .field {
   display: grid;
   gap: 0.55rem;
+}
+
+.field-grid,
+.filter-grid,
+.management-grid {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.field-grid,
+.filter-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
 .field span {
@@ -442,6 +488,25 @@ textarea:focus {
   line-height: 1.65;
 }
 
+.response-card small {
+  color: var(--muted);
+}
+
+.response-feed,
+.management-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.management-grid {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.management-card {
+  display: grid;
+  gap: 1rem;
+}
+
 .auth-shell {
   display: grid;
   place-items: center;
@@ -480,7 +545,10 @@ textarea:focus {
   .hero,
   .form-layout,
   .search-bar,
-  .details-grid {
+  .details-grid,
+  .item-card__badge-row,
+  .item-card__meta-row,
+  .response-card__topline {
     grid-template-columns: 1fr;
   }
 

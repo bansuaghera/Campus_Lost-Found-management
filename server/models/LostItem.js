@@ -6,14 +6,42 @@ const LostItem = sequelize.define("LostItem", {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  description: DataTypes.TEXT,
-  location: DataTypes.STRING,
-  contact: DataTypes.STRING,
-  status: {
+  description: {
+    type: DataTypes.TEXT,
+    defaultValue: "",
+  },
+  category: {
     type: DataTypes.STRING,
+    allowNull: true,
+    defaultValue: "Other",
+  },
+  location: {
+    type: DataTypes.STRING,
+    defaultValue: "",
+  },
+  contact: {
+    type: DataTypes.STRING,
+    defaultValue: "",
+  },
+  reportType: {
+    type: DataTypes.STRING,
+    allowNull: true,
     defaultValue: "Lost",
   },
-  userId: DataTypes.INTEGER,
+  status: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    defaultValue: "Lost",
+  },
+  reportedAt: {
+    type: DataTypes.DATEONLY,
+    allowNull: true,
+    defaultValue: DataTypes.NOW,
+  },
+  userId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
 });
 
 module.exports = LostItem;
