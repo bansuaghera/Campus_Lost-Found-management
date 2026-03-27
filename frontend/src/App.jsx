@@ -9,6 +9,8 @@ import ItemDetails from "./pages/ItemDetails";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 const readStoredUser = () => {
   const stored = localStorage.getItem("campus-user");
@@ -114,6 +116,8 @@ function App() {
                 )
               }
             />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:userId/:token" element={<ResetPassword />} />
             <Route
               path="/register"
               element={
