@@ -91,4 +91,10 @@ Create a seamless and efficient Lost & Found system that ensures:
 
 ---
 
+## Team
+
+* Heet Bathai
+* Bansi Aghera
+* Gaurav Kumar Borad
+
 💡 *Making campuses smarter, one lost item at a time!*
