@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import API from "../services/api";
 
 function Login({ onLogin }) {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
 
     if (!form.email.trim() || !form.password.trim()) {
@@ -18,12 +20,20 @@ function Login({ onLogin }) {
       return;
     }
 
-    onLogin({
-      name: form.email.split("@")[0],
-      email: form.email.trim(),
-    });
-
-    navigate("/profile");
+    try {
+      setSubmitting(true);
+      setError("");
+      const res = await API.post("/auth/login", {
+        email: form.email.trim(),
+        password: form.password,
+      });
+      onLogin(res.data);
+      navigate("/profile");
+    } catch (err) {
+      setError(err.response?.data?.msg || "Login failed. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -32,8 +42,8 @@ function Login({ onLogin }) {
         <p className="eyebrow">Welcome back</p>
         <h1>Log in to manage item reports</h1>
         <p className="auth-copy">
-          Use a simple local session for now so the frontend remains fully
-          usable while backend auth is still being built.
+          Use your registered campus account to add items, review responses, and
+          manage your reports.
         </p>
 
         <label className="field">
@@ -52,7 +62,7 @@ function Login({ onLogin }) {
           <input
             name="password"
             type="password"
-            placeholder="Enter any password for local demo mode"
+            placeholder="Enter your password"
             value={form.password}
             onChange={handleChange}
           />
@@ -60,8 +70,8 @@ function Login({ onLogin }) {
 
         {error && <p className="inline-message inline-message--error">{error}</p>}
 
-        <button className="button button--primary" type="submit">
-          Login
+        <button className="button button--primary" type="submit" disabled={submitting}>
+          {submitting ? "Logging in..." : "Login"}
         </button>
 
         <p className="auth-footnote">

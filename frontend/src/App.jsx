@@ -1,5 +1,6 @@
+import { useEffect, useMemo, useState } from "react";
 import { BrowserRouter as Router, Navigate, Route, Routes } from "react-router-dom";
-import { useMemo, useState } from "react";
+import API from "./services/api";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import AddItem from "./pages/AddItems";
@@ -24,16 +25,36 @@ function App() {
     return stored ? JSON.parse(stored) : null;
   });
 
+  useEffect(() => {
+    const loadCurrentUser = async () => {
+      if (!token) {
+        return;
+      }
+
+      try {
+        const res = await API.get("/auth/me");
+        setUser(res.data);
+        localStorage.setItem("campus-user", JSON.stringify(res.data));
+      } catch {
+        localStorage.removeItem("token");
+        localStorage.removeItem("campus-user");
+        setToken(null);
+        setUser(null);
+      }
+    };
+
+    loadCurrentUser();
+  }, [token]);
+
   const authContext = useMemo(
     () => ({
       isAuthenticated: Boolean(token),
       user,
-      login(nextUser) {
-        const sessionToken = `session-${Date.now()}`;
-        localStorage.setItem("token", sessionToken);
-        localStorage.setItem("campus-user", JSON.stringify(nextUser));
-        setToken(sessionToken);
-        setUser(nextUser);
+      login(session) {
+        localStorage.setItem("token", session.token);
+        localStorage.setItem("campus-user", JSON.stringify(session.user));
+        setToken(session.token);
+        setUser(session.user);
       },
       logout() {
         localStorage.removeItem("token");
@@ -54,7 +75,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/search" element={<Search />} />
-            <Route path="/item/:id" element={<ItemDetails />} />
+            <Route path="/item/:id" element={<ItemDetails auth={authContext} />} />
             <Route
               path="/add"
               element={

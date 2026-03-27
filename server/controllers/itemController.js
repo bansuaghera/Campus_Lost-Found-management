@@ -1,39 +1,101 @@
+const { Op } = require("sequelize");
 const LostItem = require("../models/LostItem");
 
-// Add item
 exports.addItem = async (req, res) => {
-  const item = await LostItem.create({
-    ...req.body,
-    userId: req.user.id,
-  });
-  res.json(item);
+  try {
+    const item = await LostItem.create({
+      ...req.body,
+      userId: req.user.id,
+    });
+
+    res.status(201).json(item);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 };
 
-// Get all items
 exports.getItems = async (req, res) => {
-  const items = await LostItem.findAll();
-  res.json(items);
+  try {
+    const items = await LostItem.findAll({
+      order: [["createdAt", "DESC"]],
+    });
+
+    res.json(items);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 };
 
-// Get single item
 exports.getItem = async (req, res) => {
-  const item = await LostItem.findByPk(req.params.id);
-  res.json(item);
+  try {
+    const item = await LostItem.findByPk(req.params.id);
+
+    if (!item) {
+      return res.status(404).json({ message: "Item not found" });
+    }
+
+    res.json(item);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 };
 
-// My items
 exports.getMyItems = async (req, res) => {
-  const items = await LostItem.findAll({
-    where: { userId: req.user.id },
-  });
-  res.json(items);
+  try {
+    const items = await LostItem.findAll({
+      where: { userId: req.user.id },
+      order: [["createdAt", "DESC"]],
+    });
+
+    res.json(items);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 };
 
-// Update status 🔥
+exports.searchItems = async (req, res) => {
+  try {
+    const normalizedQuery = req.query.query?.trim();
+
+    if (!normalizedQuery) {
+      return res.status(400).json({ message: "Search query is required" });
+    }
+
+    const items = await LostItem.findAll({
+      where: {
+        [Op.or]: [
+          { title: { [Op.iLike]: `%${normalizedQuery}%` } },
+          { description: { [Op.iLike]: `%${normalizedQuery}%` } },
+          { location: { [Op.iLike]: `%${normalizedQuery}%` } },
+          { contact: { [Op.iLike]: `%${normalizedQuery}%` } },
+        ],
+      },
+      order: [["createdAt", "DESC"]],
+    });
+
+    res.json(items);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 exports.updateStatus = async (req, res) => {
-  await LostItem.update(
-    { status: req.body.status },
-    { where: { id: req.params.id } },
-  );
-  res.json({ msg: "Status Updated" });
+  try {
+    const item = await LostItem.findByPk(req.params.id);
+
+    if (!item) {
+      return res.status(404).json({ message: "Item not found" });
+    }
+
+    if (item.userId !== req.user.id) {
+      return res.status(403).json({ message: "Not allowed to update this item" });
+    }
+
+    item.status = req.body.status || item.status;
+    await item.save();
+
+    res.json(item);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 };

@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import API from "../services/api";
 
 function Register({ onRegister }) {
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
 
     if (!form.name.trim() || !form.email.trim() || !form.password.trim()) {
@@ -18,12 +20,27 @@ function Register({ onRegister }) {
       return;
     }
 
-    onRegister({
-      name: form.name.trim(),
-      email: form.email.trim(),
-    });
+    try {
+      setSubmitting(true);
+      setError("");
+      await API.post("/auth/register", {
+        name: form.name.trim(),
+        email: form.email.trim(),
+        password: form.password,
+      });
 
-    navigate("/profile");
+      const loginRes = await API.post("/auth/login", {
+        email: form.email.trim(),
+        password: form.password,
+      });
+
+      onRegister(loginRes.data);
+      navigate("/profile");
+    } catch (err) {
+      setError(err.response?.data?.msg || "Registration failed. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -32,8 +49,8 @@ function Register({ onRegister }) {
         <p className="eyebrow">Create account</p>
         <h1>Start reporting items in seconds</h1>
         <p className="auth-copy">
-          This registration stores a local session so the frontend is usable
-          today, even before a dedicated auth API is added.
+          Create a real account backed by the server so your items and responses
+          stay connected across sessions.
         </p>
 
         <label className="field">
@@ -62,7 +79,7 @@ function Register({ onRegister }) {
           <input
             name="password"
             type="password"
-            placeholder="Choose any password for local demo mode"
+            placeholder="Choose a password"
             value={form.password}
             onChange={handleChange}
           />
@@ -70,12 +87,12 @@ function Register({ onRegister }) {
 
         {error && <p className="inline-message inline-message--error">{error}</p>}
 
-        <button className="button button--primary" type="submit">
-          Register
+        <button className="button button--primary" type="submit" disabled={submitting}>
+          {submitting ? "Creating account..." : "Register"}
         </button>
 
         <p className="auth-footnote">
-          Already have a local session? <Link to="/login">Login instead</Link>
+          Already have an account? <Link to="/login">Login instead</Link>
         </p>
       </form>
     </section>

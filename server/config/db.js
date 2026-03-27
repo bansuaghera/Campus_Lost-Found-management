@@ -12,12 +12,8 @@ const sequelize = new Sequelize(
 );
 
 const connectDB = async () => {
-  try {
-    await sequelize.authenticate();
-    console.log("PostgreSQL Connected");
-  } catch (err) {
-    console.error("DB Error:", err);
-  }
+  await sequelize.authenticate();
+  console.log("PostgreSQL Connected");
 };
 
 module.exports = { sequelize, connectDB };

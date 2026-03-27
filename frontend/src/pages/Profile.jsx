@@ -4,25 +4,27 @@ import ItemCard from "../components/ItemCard";
 
 function Profile({ user }) {
   const [items, setItems] = useState([]);
+  const [responses, setResponses] = useState([]);
   const [status, setStatus] = useState("loading");
 
   useEffect(() => {
-    const loadItems = async () => {
+    const loadProfileData = async () => {
       try {
         setStatus("loading");
-        const res = await API.get("/items");
-        const filteredItems = res.data.filter((item) =>
-          user?.email ? item.contact === user.email : false,
-        );
-        setItems(filteredItems);
+        const [itemsRes, responsesRes] = await Promise.all([
+          API.get("/items/my"),
+          API.get("/response/my"),
+        ]);
+        setItems(itemsRes.data);
+        setResponses(responsesRes.data);
         setStatus("success");
       } catch {
         setStatus("error");
       }
     };
 
-    loadItems();
-  }, [user?.email]);
+    loadProfileData();
+  }, []);
 
   return (
     <section className="page-stack">
@@ -31,8 +33,8 @@ function Profile({ user }) {
           <p className="eyebrow">Profile</p>
           <h1>{user?.name || "Campus member"}</h1>
           <p className="hero__text">
-            {user?.email || "No email saved"} is currently using the local demo
-            session for this frontend.
+            {user?.email || "No email saved"} is signed in and ready to manage
+            item reports.
           </p>
         </div>
 
@@ -41,27 +43,31 @@ function Profile({ user }) {
             <span className="stat-card__value">{items.length}</span>
             <span className="stat-card__label">My posted items</span>
           </div>
+          <div className="stat-card">
+            <span className="stat-card__value">{responses.length}</span>
+            <span className="stat-card__label">Responses received</span>
+          </div>
         </div>
       </section>
 
       {status === "loading" && (
         <div className="empty-state">
           <h3>Loading your reports</h3>
-          <p>Checking for items tied to your saved contact email.</p>
+          <p>Fetching your items and their response activity from the server.</p>
         </div>
       )}
 
       {status === "error" && (
         <div className="empty-state empty-state--error">
           <h3>Profile data unavailable</h3>
-          <p>The backend item list could not be loaded right now.</p>
+          <p>The backend could not load your protected profile data right now.</p>
         </div>
       )}
 
       {status === "success" && items.length === 0 && (
         <div className="empty-state">
           <h3>No reports from you yet</h3>
-          <p>Add an item using your saved email as contact and it will appear here.</p>
+          <p>Add your first lost or found item and it will show up here.</p>
         </div>
       )}
 

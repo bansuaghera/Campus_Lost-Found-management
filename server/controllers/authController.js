@@ -1,49 +1,97 @@
-const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
-// Register
+const toSafeUser = (user) => ({
+  id: user.id,
+  name: user.name,
+  email: user.email,
+});
+
 exports.register = async (req, res) => {
-  const { name, email, password } = req.body;
+  try {
+    const { name, email, password } = req.body;
 
-  const hash = await bcrypt.hash(password, 10);
+    if (!name || !email || !password) {
+      return res.status(400).json({ msg: "Name, email, and password are required" });
+    }
 
-  const user = await User.create({
-    name,
-    email,
-    password: hash,
-  });
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser) {
+      return res.status(400).json({ msg: "User already exists" });
+    }
 
-  res.json(user);
+    const hash = await bcrypt.hash(password, 10);
+    const user = await User.create({
+      name,
+      email,
+      password: hash,
+    });
+
+    res.status(201).json(toSafeUser(user));
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
+  }
 };
 
-// Login
 exports.login = async (req, res) => {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-  const user = await User.findOne({ where: { email } });
-  if (!user) return res.status(400).json({ msg: "User not found" });
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(400).json({ msg: "User not found" });
+    }
 
-  const match = await bcrypt.compare(password, user.password);
-  if (!match) return res.status(400).json({ msg: "Wrong password" });
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+      return res.status(400).json({ msg: "Wrong password" });
+    }
 
-  const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET);
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
 
-  res.json({ token });
+    res.json({ token, user: toSafeUser(user) });
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
+  }
 };
 
-// Get Profile
 exports.getMe = async (req, res) => {
-  const user = await User.findByPk(req.user.id, {
-    attributes: ["id", "name", "email"],
-  });
-  res.json(user);
+  try {
+    const user = await User.findByPk(req.user.id, {
+      attributes: ["id", "name", "email"],
+    });
+
+    if (!user) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
+  }
 };
 
-// Update Profile
 exports.updateUser = async (req, res) => {
-  await User.update(req.body, {
-    where: { id: req.user.id },
-  });
-  res.json({ msg: "Updated" });
+  try {
+    const updates = { ...req.body };
+
+    if (updates.password) {
+      updates.password = await bcrypt.hash(updates.password, 10);
+    }
+
+    await User.update(updates, {
+      where: { id: req.user.id },
+    });
+
+    const updatedUser = await User.findByPk(req.user.id, {
+      attributes: ["id", "name", "email"],
+    });
+
+    res.json(updatedUser);
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
+  }
 };

@@ -1,38 +1,60 @@
+const { Op } = require("sequelize");
 const Response = require("../models/Response");
 const LostItem = require("../models/LostItem");
 
-// Add response
 exports.addResponse = async (req, res) => {
-  const { itemId, message } = req.body;
+  try {
+    const { itemId, message } = req.body;
 
-  const response = await Response.create({
-    itemId,
-    message,
-    responderId: req.user.id,
-  });
+    const item = await LostItem.findByPk(itemId);
+    if (!item) {
+      return res.status(404).json({ message: "Item not found" });
+    }
 
-  res.json(response);
+    const response = await Response.create({
+      itemId,
+      message,
+      responderId: req.user.id,
+    });
+
+    res.status(201).json(response);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 };
 
-// Get responses of item
 exports.getResponses = async (req, res) => {
-  const responses = await Response.findAll({
-    where: { itemId: req.params.itemId },
-  });
-  res.json(responses);
+  try {
+    const responses = await Response.findAll({
+      where: { itemId: req.params.itemId },
+      order: [["createdAt", "DESC"]],
+    });
+
+    res.json(responses);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 };
 
-// Responses on my items
 exports.getMyResponses = async (req, res) => {
-  const items = await LostItem.findAll({
-    where: { userId: req.user.id },
-  });
+  try {
+    const items = await LostItem.findAll({
+      where: { userId: req.user.id },
+      attributes: ["id"],
+    });
 
-  const ids = items.map((i) => i.id);
+    const ids = items.map((item) => item.id);
+    if (ids.length === 0) {
+      return res.json([]);
+    }
 
-  const responses = await Response.findAll({
-    where: { itemId: ids },
-  });
+    const responses = await Response.findAll({
+      where: { itemId: { [Op.in]: ids } },
+      order: [["createdAt", "DESC"]],
+    });
 
-  res.json(responses);
+    res.json(responses);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 };
