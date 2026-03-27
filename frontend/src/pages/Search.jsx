@@ -5,13 +5,34 @@ import ItemCard from "../components/ItemCard";
 function Search() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
+  const [searchState, setSearchState] = useState("idle");
+  const [error, setError] = useState("");
 
-  const handleSearch = () => {
-    API.get("/search", {
-      params: { query },
-    })
-      .then((res) => setResults(res.data))
-      .catch((err) => console.log(err));
+  const handleSearch = async () => {
+    if (!query.trim()) {
+      setSearchState("idle");
+      setResults([]);
+      setError("Enter a keyword like bottle, ID card, headphones, or bag.");
+      return;
+    }
+
+    try {
+      setSearchState("loading");
+      setError("");
+      const res = await API.get("/search", {
+        params: { query: query.trim() },
+      });
+      setResults(res.data);
+      setSearchState("success");
+    } catch (err) {
+      setResults([]);
+      setError(
+        err.response?.data?.message ||
+          err.response?.data?.error ||
+          "Search is unavailable right now. Please confirm the backend is running.",
+      );
+      setSearchState("error");
+    }
   };
 
   return (
@@ -33,23 +54,30 @@ function Search() {
             placeholder="Search for wallet, bottle, keys..."
           />
           <button className="button button--primary" onClick={handleSearch}>
-            Search
+            {searchState === "loading" ? "Searching..." : "Search"}
           </button>
         </div>
+
+        {error && <p className="inline-message inline-message--error">{error}</p>}
       </section>
 
-      {results.length > 0 ? (
+      {searchState === "success" && results.length > 0 ? (
         <div className="card-grid">
           {results.map((item) => (
             <ItemCard key={item.id} item={item} />
           ))}
         </div>
       ) : (
-        <div className="empty-state">
-          <h3>No matching items yet</h3>
+        <div className={`empty-state ${searchState === "error" ? "empty-state--error" : ""}`}>
+          <h3>
+            {searchState === "loading"
+              ? "Looking through item reports"
+              : "No matching items yet"}
+          </h3>
           <p>
-            Search results will appear here after you enter a title keyword and
-            run a search.
+            {searchState === "loading"
+              ? "We are checking the campus board for close matches."
+              : "Search results will appear here after you enter a title keyword and run a search."}
           </p>
         </div>
       )}

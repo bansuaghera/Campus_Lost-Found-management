@@ -1,59 +1,39 @@
-const Item = require("../models/Item");
-const { Op } = require("sequelize");
+const LostItem = require("../models/LostItem");
 
-// ➕ Add Item
+// Add item
 exports.addItem = async (req, res) => {
-  try {
-    const item = await Item.create(req.body);
-    res.status(201).json(item);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+  const item = await LostItem.create({
+    ...req.body,
+    userId: req.user.id,
+  });
+  res.json(item);
 };
 
-// 📄 Get All Items
+// Get all items
 exports.getItems = async (req, res) => {
-  try {
-    const items = await Item.findAll({
-      order: [["createdAt", "DESC"]],
-    });
-    res.json(items);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+  const items = await LostItem.findAll();
+  res.json(items);
 };
 
-// 🔍 Get Single Item
-exports.getItemById = async (req, res) => {
-  try {
-    const item = await Item.findByPk(req.params.id);
-    if (!item) return res.status(404).json({ message: "Item not found" });
-    res.json(item);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+// Get single item
+exports.getItem = async (req, res) => {
+  const item = await LostItem.findByPk(req.params.id);
+  res.json(item);
 };
 
-// 🔎 Search Items
-exports.searchItems = async (req, res) => {
-  try {
-    const { query } = req.query;
-    const normalizedQuery = query?.trim();
+// My items
+exports.getMyItems = async (req, res) => {
+  const items = await LostItem.findAll({
+    where: { userId: req.user.id },
+  });
+  res.json(items);
+};
 
-    if (!normalizedQuery) {
-      return res.status(400).json({ message: "Search query is required" });
-    }
-
-    const items = await Item.findAll({
-      where: {
-        title: {
-          [Op.iLike]: `%${normalizedQuery}%`,
-        },
-      },
-    });
-
-    res.json(items);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+// Update status 🔥
+exports.updateStatus = async (req, res) => {
+  await LostItem.update(
+    { status: req.body.status },
+    { where: { id: req.params.id } },
+  );
+  res.json({ msg: "Status Updated" });
 };

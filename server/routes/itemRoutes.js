@@ -1,17 +1,19 @@
-const express = require("express");
-const router = express.Router();
-
+const router = require("express").Router();
+const auth = require("../middleware/authMiddleware");
 const {
   addItem,
   getItems,
-  getItemById,
+  getItem,
+  getMyItems,
+  updateStatus,
   searchItems,
 } = require("../controllers/itemController");
 
-// Routes
-router.post("/items", addItem);
 router.get("/items", getItems);
-router.get("/items/:id", getItemById);
+router.get("/items/my", auth, getMyItems);
+router.get("/items/:id", getItem);
 router.get("/search", searchItems);
+router.post("/items", auth, addItem);
+router.put("/items/:id/status", auth, updateStatus);
 
 module.exports = router;

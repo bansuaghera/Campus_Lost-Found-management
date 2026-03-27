@@ -1,44 +1,22 @@
-require("dotenv").config(); // MUST be at top
+require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
+
 const { connectDB, sequelize } = require("./config/db");
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
+connectDB();
+
 // Routes
+app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api", require("./routes/itemRoutes"));
+app.use("/api", require("./routes/responseRoutes"));
 
-// Test route
-app.get("/", (req, res) => {
-  res.send("API Running...");
-});
+sequelize.sync().then(() => console.log("DB Synced"));
 
-const startServer = async () => {
-  try {
-    await connectDB();
-    await sequelize.sync();
-    console.log("Tables synced");
-
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  } catch (error) {
-    console.error("Server startup failed:", error.message);
-
-    if (error.original?.code === "3D000") {
-      console.error(
-        `Create the PostgreSQL database named "${process.env.DB_NAME}" and restart the server.`,
-      );
-    }
-
-    process.exit(1);
-  }
-};
-
-startServer();
+app.listen(process.env.PORT, () => console.log("Server running on port 5000"));
