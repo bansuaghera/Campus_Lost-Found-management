@@ -2,6 +2,7 @@ const { Op } = require("sequelize");
 const LostItem = require("../models/LostItem");
 const Response = require("../models/Response");
 const User = require("../models/User");
+const { sendLostItemBroadcast } = require("../services/lostItemNotificationService");
 
 const VALID_STATUSES = ["Lost", "Found", "Claimed", "Resolved"];
 const VALID_REPORT_TYPES = ["Lost", "Found"];
@@ -84,6 +85,14 @@ exports.addItem = async (req, res) => {
     const createdItem = await LostItem.findByPk(item.id, {
       include: itemInclude,
     });
+
+    if (createdItem.reportType === "Lost") {
+      try {
+        await sendLostItemBroadcast(createdItem);
+      } catch (mailError) {
+        console.error("Lost item notification failed:", mailError.message);
+      }
+    }
 
     res.status(201).json(createdItem);
   } catch (error) {

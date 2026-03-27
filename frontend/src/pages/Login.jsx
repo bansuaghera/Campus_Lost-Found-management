@@ -74,6 +74,10 @@ function Login({ onLogin }) {
           {submitting ? "Logging in..." : "Login"}
         </button>
 
+        <p className="auth-helper-link">
+          <Link to="/forgot-password">Forgot password?</Link>
+        </p>
+
         <p className="auth-footnote">
           New here? <Link to="/register">Create an account</Link>
         </p>
