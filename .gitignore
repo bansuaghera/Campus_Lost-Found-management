@@ -1,1 +1,55 @@
-**/node_modules/
+# ======================
+# Node modules
+# ======================
+node_modules/
+server/node_modules/
+frontend/node_modules/
+
+# ======================
+# Environment variables
+# ======================
+.env
+server/.env
+frontend/.env
+
+# Keep example env
+!*.env.example
+
+# ======================
+# Logs
+# ======================
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ======================
+# Build folders
+# ======================
+dist/
+build/
+
+# ======================
+# OS files
+# ======================
+.DS_Store
+Thumbs.db
+
+# ======================
+# VS Code settings
+# ======================
+.vscode/
+
+# ======================
+# Package lock (optional)
+# ======================
+# If you want reproducible installs, KEEP this
+# Otherwise uncomment below to ignore
+# package-lock.json
+
+# ======================
+# Misc
+# ======================
+coverage/
+.cache/
