@@ -7,22 +7,53 @@ function Search() {
   const [results, setResults] = useState([]);
 
   const handleSearch = () => {
-    API.get(`/search?query=${query}`)
+    API.get("/search", {
+      params: { query },
+    })
       .then((res) => setResults(res.data))
       .catch((err) => console.log(err));
   };
 
   return (
-    <div>
-      <h2>Search Items</h2>
+    <section className="page-stack">
+      <section className="search-panel">
+        <div>
+          <p className="eyebrow">Search directory</p>
+          <h1>Look up a lost item by name or keyword</h1>
+          <p>
+            Try product names, colors, bag types, or anything memorable from
+            the item title.
+          </p>
+        </div>
 
-      <input onChange={(e) => setQuery(e.target.value)} />
-      <button onClick={handleSearch}>Search</button>
+        <div className="search-bar">
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search for wallet, bottle, keys..."
+          />
+          <button className="button button--primary" onClick={handleSearch}>
+            Search
+          </button>
+        </div>
+      </section>
 
-      {results.map((item) => (
-        <ItemCard key={item._id} item={item} />
-      ))}
-    </div>
+      {results.length > 0 ? (
+        <div className="card-grid">
+          {results.map((item) => (
+            <ItemCard key={item.id} item={item} />
+          ))}
+        </div>
+      ) : (
+        <div className="empty-state">
+          <h3>No matching items yet</h3>
+          <p>
+            Search results will appear here after you enter a title keyword and
+            run a search.
+          </p>
+        </div>
+      )}
+    </section>
   );
 }
 

@@ -8,14 +8,18 @@ import ItemDetails from "./pages/ItemDetails";
 function App() {
   return (
     <Router>
-      <Navbar />
+      <div className="app-shell">
+        <Navbar />
 
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/add" element={<AddItem />} />
-        <Route path="/search" element={<Search />} />
-        <Route path="/item/:id" element={<ItemDetails />} />
-      </Routes>
+        <main className="app-main">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/add" element={<AddItem />} />
+            <Route path="/search" element={<Search />} />
+            <Route path="/item/:id" element={<ItemDetails />} />
+          </Routes>
+        </main>
+      </div>
     </Router>
   );
 }
